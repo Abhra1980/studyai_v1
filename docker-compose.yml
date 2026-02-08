@@ -6,6 +6,9 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - CSV_PATH=/app/AI_ML_Syllabus_Structured.csv
 
@@ -16,7 +19,7 @@ services:
       args:
         VITE_API_BASE_URL: /api/v1
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - backend
     env_file: .env

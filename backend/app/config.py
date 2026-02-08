@@ -39,14 +39,16 @@ class Settings(BaseSettings):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        # Remove params not supported by asyncpg
+        # Remove params not supported by asyncpg; use ssl=true for asyncpg
         for param in ("channel_binding=require", "sslmode=require"):
             url = url.replace(f"&{param}", "")
             url = url.replace(f"?{param}&", "?")
             url = url.replace(f"?{param}", "")
         # Clean up trailing ? if all params were stripped
-        if url.endswith("?"):
-            url = url[:-1]
+        url = url.rstrip("?")
+        # Ensure ssl=true for Neon (asyncpg format)
+        if "ssl=" not in url:
+            url = url + ("&" if "?" in url else "?") + "ssl=true"
         return url
 
     @property
