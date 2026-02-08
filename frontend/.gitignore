@@ -31,7 +31,6 @@ dist-ssr
 # Build outputs
 out/
 
-# Dependencies
-package-lock.json
+# Dependencies (keep package-lock.json for Docker npm ci)
 yarn.lock
 pnpm-lock.yaml
