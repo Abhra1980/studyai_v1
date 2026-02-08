@@ -1,6 +1,6 @@
 # StudyAI – Intelligent Learning Platform
 
-AI-powered education platform for AI & Machine Learning topics. Browse structured syllabi, generate lessons with LLMs, take quizzes, and track progress.
+AI-powered education platform for AI & Machine Learning topics. Browse structured, generate lessons with LLMs, take quizzes, and track progress.
 
 ---
 
