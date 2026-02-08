@@ -1,0 +1,31 @@
+# FastAPI & Server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sse-starlette==2.2.1
+python-multipart==0.0.20
+
+# Database
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+greenlet==3.1.1
+
+# Pydantic & Settings
+pydantic[email]==2.10.4
+pydantic-settings==2.7.1
+
+# LLM & AI
+langchain==0.3.14
+langchain-openai==0.3.0
+langchain-community==0.3.14
+ollama>=0.3.0
+
+# Data
+pandas==2.2.3
+
+# Auth
+PyJWT==2.9.0
+bcrypt==4.2.1
+
+# Utilities
+python-dotenv==1.0.1
+httpx==0.28.1

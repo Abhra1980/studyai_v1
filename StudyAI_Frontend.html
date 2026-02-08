@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyAI — Intelligent Learning Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #FAFBFC; --white: #FFFFFF; --border: #E8ECF1;
+  --text: #1A1D23; --text-2: #374151; --text-3: #5A6170; --muted: #8B93A1; --light: #A0A7B5; --pale: #B0B7C3; --faint: #D0D5DD;
+  --surface: #F5F7FA; --surface-2: #F0F2F5;
+  --blue: #2563EB; --blue-light: #F0F4FF; --blue-border: #E0E7FF;
+  --violet: #7C3AED; --violet-light: #FAF5FF; --violet-border: #EDE9FE;
+  --green: #059669; --green-light: #ECFDF5;
+  --red: #DC2626; --red-light: #FEF2F2; --red-border: #FECACA;
+  --amber: #B45309; --amber-light: #FFFBEB; --amber-border: #FDE68A;
+  --orange: #F97316;
+  --sans: 'DM Sans', 'Helvetica Neue', sans-serif;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 14px; --radius-sm: 10px; --radius-xs: 8px; --radius-pill: 6px;
+}
+body { font-family: var(--serif); color: var(--text); background: var(--bg); height: 100vh; overflow: hidden; }
+button { font-family: var(--sans); cursor: pointer; }
+input, select { font-family: var(--sans); }
+
+.app { display: flex; height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 292px; min-width: 292px; background: var(--white);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  transition: all 0.3s ease; overflow: hidden;
+}
+.sidebar.collapsed { width: 0; min-width: 0; }
+.sidebar-logo { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10; }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800; font-family: var(--sans);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25); flex-shrink: 0;
+}
+.logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.5px; font-family: var(--sans); }
+.logo-sub { font-size: 10px; color: var(--muted); font-family: var(--sans); letter-spacing: 0.5px; }
+
+.sidebar-tabs { display: flex; padding: 12px 16px 0; gap: 4; }
+.tab-btn {
+  flex: 1; padding: 8px 0; border-radius: var(--radius-xs); border: none;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.2px;
+  background: transparent; color: var(--muted); transition: all 0.2s;
+}
+.tab-btn.active { background: var(--blue-light); color: var(--blue); }
+
+.search-wrap { padding: 12px 16px 8px; }
+.search-box {
+  display: flex; align-items: center; gap: 8; padding: 8px 12px;
+  background: var(--surface); border-radius: var(--radius-xs); border: 1px solid var(--border);
+}
+.search-box input { border: none; background: transparent; outline: none; flex: 1; font-size: 12.5px; color: var(--text); }
+.search-box input::placeholder { color: var(--light); }
+
+.tree { flex: 1; overflow-y: auto; padding: 4px 10px 20px; }
+.tree::-webkit-scrollbar { width: 4px; }
+.tree::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+.part-btn {
+  width: 100%; display: flex; align-items: center; gap: 10; padding: 10px 12px;
+  border: none; border-radius: var(--radius-sm); background: transparent; text-align: left; transition: all 0.15s;
+}
+.part-btn:hover { background: var(--surface); }
+.part-btn.exp { background: var(--blue-light); }
+.p-icon { font-size: 18px; flex-shrink: 0; }
+.p-title { font-size: 12.5px; font-weight: 600; color: var(--text); font-family: var(--sans); line-height: 1.3; }
+.p-meta { font-size: 10px; color: var(--light); font-family: var(--sans); margin-top: 1px; }
+.p-arrow { font-size: 10px; color: var(--light); transition: transform 0.2s; }
+.p-arrow.open { transform: rotate(90deg); }
+
+.topics { padding-left: 20px; padding-top: 4px; }
+.t-btn {
+  width: 100%; display: flex; align-items: flex-start; gap: 8; padding: 9px 12px;
+  border: none; border-radius: var(--radius-xs); background: transparent;
+  border-left: 3px solid transparent; text-align: left; transition: all 0.15s;
+}
+.t-btn:hover { background: var(--surface); }
+.t-btn.act { background: rgba(37,99,235,0.06); border-left-color: var(--blue); }
+.t-badge {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-family: var(--sans); font-weight: 700;
+  background: var(--border); color: var(--light);
+}
+.t-btn.act .t-badge { background: var(--blue); color: #fff; }
+.t-title { font-size: 12px; font-weight: 500; color: var(--text); font-family: var(--sans); line-height: 1.3; }
+.t-sub { font-size: 10px; color: var(--pale); font-family: var(--sans); margin-top: 2px; }
+
+.sidebar-user {
+  padding: 14px 16px; border-top: 1px solid var(--border); background: var(--bg);
+  display: flex; align-items: center; gap: 10;
+}
+.u-avatar {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--orange), #EF4444);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 700; font-family: var(--sans); flex-shrink: 0;
+}
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  height: 54px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.topbar-l { display: flex; align-items: center; gap: 14; }
+.menu-btn { border: none; background: none; font-size: 18px; color: var(--muted); padding: 4px; border-radius: 6px; }
+.menu-btn:hover { background: var(--surface); }
+.topbar-r { display: flex; align-items: center; gap: 12; }
+.level-sel { padding: 6px 12px; border-radius: var(--radius-xs); border: 1px solid var(--border); font-size: 11px; color: var(--text-3); background: var(--bg); outline: none; }
+.prog-badge { padding: 6px 14px; border-radius: var(--radius-xs); background: var(--blue-light); font-size: 11px; font-weight: 600; color: var(--blue); font-family: var(--sans); }
+.bc { display: flex; align-items: center; gap: 6; font-family: var(--sans); font-size: 11px; }
+.bc-c { color: var(--light); cursor: pointer; } .bc-c:hover { color: var(--blue); }
+.bc-s { color: var(--faint); } .bc-cur { color: var(--text); font-weight: 600; }
+
+.content { flex: 1; overflow-y: auto; background: var(--bg); }
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
+.hidden { display: none !important; }
+
+/* ── DASHBOARD ── */
+.dash { max-width: 900px; margin: 0 auto; padding: 32px 28px; }
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 32px; }
+.scard { padding: 22px 20px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.scard .lbl { font-size: 11px; color: var(--muted); font-family: var(--sans); font-weight: 500; margin-bottom: 8px; }
+.scard .val { font-size: 28px; font-weight: 800; font-family: var(--sans); letter-spacing: -1px; }
+.scard .sub { font-size: 10px; color: var(--pale); font-family: var(--sans); margin-top: 4px; }
+.scard .bar { margin-top: 10px; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.scard .bar .fill { height: 100%; border-radius: 2px; transition: width 1s; }
+
+.panel { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+.panel-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.panel-t { font-size: 15px; font-weight: 700; font-family: var(--sans); }
+.panel-lnk { font-size: 11px; color: var(--blue); font-family: var(--sans); font-weight: 600; cursor: pointer; }
+
+.r-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--surface-2); }
+.r-row:last-child { border-bottom: none; }
+.r-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-right: 10px; }
+.r-txt { font-size: 13px; font-family: var(--sans); }
+.r-btn { padding: 5px 14px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--bg); font-size: 11px; color: var(--text-3); font-weight: 500; }
+.r-btn:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
+
+.bars { display: flex; gap: 12px; align-items: flex-end; height: 120px; }
+.bcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6; }
+.bval { font-size: 9px; color: var(--muted); font-family: var(--sans); }
+.bbar { width: 100%; border-radius: 6px; background: linear-gradient(180deg,var(--blue),var(--violet)); transition: height 0.8s; }
+.bbar.empty { background: var(--surface-2); opacity: 0.5; }
+.bday { font-size: 10px; color: var(--text-3); font-family: var(--sans); font-weight: 500; }
+
+/* ── SYLLABUS GRID ── */
+.sg { max-width: 960px; margin: 0 auto; padding: 36px 28px; }
+.sg h2 { font-size: 26px; font-weight: 800; font-family: var(--sans); letter-spacing: -0.8px; margin-bottom: 8px; }
+.sg>p { font-size: 14px; color: #6B7280; font-family: var(--sans); line-height: 1.6; margin-bottom: 32px; }
+.sg-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.sg-card {
+  padding: 22px 20px; background: var(--white); border-radius: var(--radius);
+  border: 1px solid var(--border); cursor: pointer; text-align: left;
+  box-shadow: var(--shadow-sm); transition: all 0.2s; position: relative; overflow: hidden;
+}
+.sg-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.sg-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; opacity: 0.7; }
+.sg-icon { font-size: 28px; margin-bottom: 10px; }
+.sg-t { font-size: 13px; font-weight: 700; font-family: var(--sans); color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+.sg-m { font-size: 11px; color: var(--muted); font-family: var(--sans); }
+.sg-prog { margin-top: 12px; height: 3px; background: var(--surface-2); border-radius: 2px; }
+.sg-fill { height: 100%; border-radius: 2px; opacity: 0.6; }
+
+/* ── LEARN VIEW ── */
+.learn { max-width: 780px; margin: 0 auto; padding: 36px 28px 60px; }
+.l-header { margin-bottom: 32px; }
+.l-tags { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.l-tag { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 10px; font-weight: 600; font-family: var(--sans); }
+.l-title { font-size: 30px; font-weight: 800; font-family: var(--sans); letter-spacing: -1px; margin-bottom: 8px; }
+.l-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); font-family: var(--sans); }
+
+.stream-ind { display: flex; align-items: center; gap: 10; padding: 12px 18px; background: linear-gradient(135deg,var(--blue-light),var(--violet-light)); border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px solid var(--blue-border); }
+.s-dots { display: flex; gap: 3px; }
+.s-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); animation: pulse 1.2s ease-in-out infinite; }
+.s-dot:nth-child(2) { animation-delay: .2s; } .s-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%,100% { opacity:.3; transform:scale(.8); } 50% { opacity:1; transform:scale(1.2); } }
+.s-txt { font-size: 12px; color: #4B5EAA; font-family: var(--sans); font-weight: 500; }
+
+.sec { margin-bottom: 24px; animation: fadeUp 0.4s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.sec-card { padding: 24px 28px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.sec-lbl { display: flex; align-items: center; gap: 8; margin-bottom: 14px; }
+.sec-lbl-i { font-size: 16px; }
+.sec-lbl-t { font-size: 13px; font-weight: 700; font-family: var(--sans); }
+.ex-p { font-size: 15px; line-height: 1.75; color: var(--text-2); margin-bottom: 14px; font-family: var(--serif); }
+.ex-p:last-child { margin-bottom: 0; }
+.ex-p strong { color: var(--text); font-weight: 700; }
+
+.ana { padding: 22px 26px; background: linear-gradient(135deg,#FFFBEB,#FEF3C7); border-radius: var(--radius); border: 1px solid var(--amber-border); position: relative; overflow: hidden; }
+.ana .bg-i { position: absolute; top: 14px; right: 18px; font-size: 38px; opacity: .12; }
+.ana-t { font-size: 14.5px; line-height: 1.7; color: #78350F; font-style: italic; font-family: var(--serif); }
+
+.mth { padding: 22px 26px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.mth-blk { background: #F8F7FF; padding: 18px 22px; border-radius: var(--radius-sm); border: 1px solid var(--violet-border); font-family: var(--mono); font-size: 13.5px; line-height: 1.8; color: #4C1D95; overflow-x: auto; white-space: pre-wrap; }
+
+.cde { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
+.cde-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #F8FAFC; border-bottom: 1px solid var(--border); }
+.cde-lang { padding: 2px 8px; border-radius: 4px; background: var(--green-light); font-size: 10px; color: var(--green); font-family: var(--sans); font-weight: 600; margin-left: 8px; }
+.btn-r { padding: 5px 14px; border-radius: var(--radius-pill); border: none; background: linear-gradient(135deg,#059669,#10B981); color: #fff; font-size: 11px; font-weight: 600; box-shadow: 0 1px 4px rgba(5,150,105,.3); }
+.btn-r:hover { filter: brightness(1.1); }
+.btn-cp { padding: 5px 12px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: #fff; font-size: 11px; color: #6B7280; }
+.btn-cp:hover { background: var(--surface); }
+.cde-body { margin: 0; padding: 20px 24px; background: #1E293B; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #E2E8F0; overflow-x: auto; white-space: pre; }
+.cde-out { padding: 14px 24px; background: #0F172A; border-top: 1px solid #334155; }
+.cde-out-l { font-size: 10px; color: #64748B; font-family: var(--sans); margin-bottom: 6px; }
+.cde-out-t { font-family: var(--mono); font-size: 12px; color: #4ADE80; white-space: pre; margin: 0; }
+
+.pit { padding: 22px 26px; background: linear-gradient(135deg,#FFF5F5,#FEF2F2); border-radius: var(--radius); border: 1px solid var(--red-border); }
+.pit-r { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #FEE2E2; }
+.pit-r:last-child { border-bottom: none; }
+.pit-x { color: #EF4444; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+.pit-t { font-size: 13px; color: #7F1D1D; line-height: 1.5; font-family: var(--sans); }
+
+/* Quiz */
+.qc { padding: 28px 30px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); animation: fadeUp .4s ease; }
+.qc-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.qc-tl { display: flex; align-items: center; gap: 8; font-size: 15px; font-weight: 700; font-family: var(--sans); }
+.qc-cnt { font-size: 11px; color: var(--muted); font-family: var(--sans); }
+.qq { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--surface-2); }
+.qq:last-of-type { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.qq-t { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; font-family: var(--sans); line-height: 1.5; }
+.qq-n { color: var(--blue); margin-right: 8px; }
+.qq-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qo {
+  padding: 12px 16px; border-radius: var(--radius-sm); text-align: left; font-size: 13px;
+  font-family: var(--sans); line-height: 1.4; transition: all .15s;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-2); cursor: pointer;
+}
+.qo:hover:not(.lk) { background: var(--blue-light); border-color: var(--blue-border); }
+.qo.sel { border: 2px solid var(--blue); background: var(--blue-light); font-weight: 600; }
+.qo.ok { border: 2px solid var(--green); background: var(--green-light); }
+.qo.no { border: 2px solid #EF4444; background: var(--red-light); }
+.qo-b {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px; margin-right: 10px;
+  font-size: 11px; font-weight: 700; background: var(--border); color: var(--muted);
+}
+.qo.sel .qo-b { background: var(--blue); color: #fff; }
+.qo.ok .qo-b { background: var(--green); color: #fff; }
+.qo.no .qo-b { background: #EF4444; color: #fff; }
+
+.q-sub { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 700; font-family: var(--sans); transition: all .2s; margin-top: 24px; }
+.q-sub.rdy { background: linear-gradient(135deg,var(--blue),var(--violet)); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.3); cursor: pointer; }
+.q-sub.rdy:hover { filter: brightness(1.1); }
+.q-sub.dis { background: var(--border); color: var(--light); cursor: default; }
+
+.q-res { padding: 18px 22px; background: linear-gradient(135deg,var(--blue-light),var(--violet-light)); border-radius: 12px; border: 1px solid var(--blue-border); text-align: center; margin-top: 24px; }
+.q-score { font-size: 28px; font-weight: 800; font-family: var(--sans); color: var(--blue); margin-bottom: 4px; }
+.q-msg { font-size: 13px; color: #6B7280; font-family: var(--sans); }
+
+.fu { margin-top: 24px; padding: 16px 20px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); display: flex; align-items: center; gap: 12; box-shadow: var(--shadow-sm); animation: fadeUp .4s ease; }
+.fu input { flex: 1; border: none; outline: none; font-size: 13.5px; color: var(--text); background: transparent; }
+.fu input::placeholder { color: var(--light); }
+.fu-send { padding: 8px 18px; border-radius: var(--radius-xs); border: none; background: linear-gradient(135deg,var(--blue),var(--violet)); color: #fff; font-size: 12px; font-weight: 600; box-shadow: 0 2px 6px rgba(37,99,235,.25); }
+.fu-send:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">S</div>
+      <div><div class="logo-text">StudyAI</div><div class="logo-sub">INTELLIGENT LEARNING</div></div>
+    </div>
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" id="tabS" onclick="nav('syllabus')">📚 Syllabus</button>
+      <button class="tab-btn" id="tabD" onclick="nav('dashboard')">📊 Dashboard</button>
+    </div>
+    <div class="search-wrap"><div class="search-box"><span style="font-size:13px;color:var(--light)">🔍</span><input placeholder="Search 2,000+ topics..." id="sInput" oninput="buildTree()"></div></div>
+    <div class="tree" id="tree"></div>
+    <div class="sidebar-user"><div class="u-avatar">P</div><div><div style="font-size:12px;font-weight:600;font-family:var(--sans)">Priya Sharma</div><div style="font-size:10px;color:var(--light);font-family:var(--sans)">Pro Plan • 7🔥 streak</div></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-l"><button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button><div id="topCtx"></div></div>
+      <div class="topbar-r"><select class="level-sel hidden" id="lvlSel"><option>🌱 Beginner</option><option selected>📘 Intermediate</option><option>🔬 Advanced</option></select><div class="prog-badge">23/132 completed</div></div>
+    </header>
+    <div class="content" id="main"></div>
+  </main>
+</div>
+
+<script>
+const SYL=[
+  {id:1,t:"Statistics for AI & ML",ic:"📊",m:14,c:"#2563EB",tp:[{id:"1.1",t:"Statistical Foundations",s:["Meaning & Scope","Types of Data","Population & Sample","Scales of Measurement"]},{id:"1.2",t:"Descriptive Statistics",s:["Central Tendency","Dispersion","Moments & Shape","Outliers & EDA"]},{id:"1.3",t:"Probability Theory",s:["Foundations","Event Types","Bayes' Theorem"]},{id:"1.4",t:"Distributions",s:["Random Variables","Key Distributions"]}]},
+  {id:2,t:"Machine Learning",ic:"🧠",m:30,c:"#7C3AED",tp:[{id:"2.1",t:"Introduction to ML",s:["What is ML?","Types of ML","The ML Pipeline","Tools & Ecosystem"]},{id:"2.2",t:"Math Foundations",s:["Linear Algebra","Calculus","Probability","Optimization"]},{id:"2.3",t:"Data Preprocessing",s:["Data Quality","Feature Scaling","Encoding","Feature Selection"]},{id:"2.4",t:"Regression",s:["Linear Regression","Polynomial","Regularized","Advanced"]},{id:"2.5",t:"Classification",s:["Logistic Regression","KNN","SVM","Naive Bayes","Evaluation"]},{id:"2.6",t:"Ensemble Methods",s:["Bagging","Boosting","Stacking"]}]},
+  {id:3,t:"Python Backend",ic:"🐍",m:10,c:"#059669"},{id:4,t:"React Frontend",ic:"⚛️",m:10,c:"#0EA5E9"},
+  {id:5,t:"Cloud & DevOps",ic:"☁️",m:8,c:"#D97706"},{id:6,t:"Data Engineering",ic:"🔧",m:5,c:"#DC2626"},
+  {id:7,t:"Project Management",ic:"📋",m:8,c:"#4F46E5"},{id:8,t:"Product Management",ic:"🎯",m:8,c:"#BE185D"},
+  {id:9,t:"Advanced AI & LLMs",ic:"🤖",m:7,c:"#7C3AED"},{id:10,t:"CS Fundamentals",ic:"💻",m:5,c:"#0D9488"},
+  {id:11,t:"Data Platforms",ic:"🗄️",m:3,c:"#B45309"},{id:12,t:"Dev Tools",ic:"🛠️",m:4,c:"#6D28D9"},
+  {id:13,t:"Emerging Tech",ic:"🚀",m:4,c:"#E11D48"},{id:14,t:"GenAI & Agents",ic:"✨",m:16,c:"#2563EB"},
+];
+
+const QZ=[
+  {q:"What determines the position of an SVM's decision boundary?",o:["All training points","Only misclassified points","Support vectors only","Random subset"],a:2},
+  {q:"What happens when you increase the C parameter?",o:["Margin becomes wider","More error tolerance","Fits training data tighter","Training speeds up"],a:2},
+  {q:"Which kernel maps data to infinite-dimensional space?",o:["Linear","Polynomial","RBF (Gaussian)","Sigmoid"],a:2},
+];
+
+let view="syllabus",expPart=2,selTopic=null,qa={},qSub=false,timer=null;
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+function buildTree(){
+  const f=(document.getElementById("sInput").value||"").toLowerCase();
+  let h="";
+  SYL.forEach(p=>{
+    if(f&&!p.t.toLowerCase().includes(f))return;
+    const e=expPart===p.id;
+    h+=`<div><button class="part-btn ${e?'exp':''}" onclick="expPart=${e?'null':p.id};buildTree()">
+      <span class="p-icon">${p.ic}</span><div style="flex:1"><div class="p-title">${p.t}</div><div class="p-meta">${p.m} modules</div></div>
+      <span class="p-arrow ${e?'open':''}">▶</span></button>`;
+    if(e&&p.tp){h+=`<div class="topics">`;p.tp.forEach(t=>{
+      const a=selTopic===t.id;
+      h+=`<button class="t-btn ${a?'act':''}" onclick="openTopic('${t.id}')"><div class="t-badge">${t.id}</div><div><div class="t-title">${t.t}</div><div class="t-sub">${t.s.length} sub-topics</div></div></button>`;
+    });h+=`</div>`}
+    h+=`</div>`;
+  });
+  document.getElementById("tree").innerHTML=h;
+}
+
+function nav(v){view=v;selTopic=null;document.getElementById("tabS").className=`tab-btn ${v!=="dashboard"?"active":""}`;document.getElementById("tabD").className=`tab-btn ${v==="dashboard"?"active":""}`;render()}
+function openTopic(id){selTopic=id;view="learn";qa={};qSub=false;document.getElementById("tabS").className="tab-btn active";document.getElementById("tabD").className="tab-btn";buildTree();render();stream()}
+
+function render(){
+  const ctx=document.getElementById("topCtx"),lvl=document.getElementById("lvlSel"),m=document.getElementById("main");
+  if(view==="dashboard"){ctx.innerHTML=`<span style="font-size:14px;font-weight:600;font-family:var(--sans)">Learning Dashboard</span>`;lvl.classList.add("hidden");m.innerHTML=dashHTML();m.scrollTop=0}
+  else if(view==="learn"){ctx.innerHTML=`<div class="bc"><span class="bc-c" onclick="nav('syllabus')">Part 2</span><span class="bc-s">/</span><span class="bc-c">Module 5</span><span class="bc-s">/</span><span class="bc-cur">SVM</span></div>`;lvl.classList.remove("hidden");m.innerHTML=learnHTML();m.scrollTop=0}
+  else{ctx.innerHTML=`<span style="font-size:14px;font-weight:600;font-family:var(--sans)">Curriculum Overview</span>`;lvl.classList.add("hidden");m.innerHTML=gridHTML();m.scrollTop=0}
+}
+
+function gridHTML(){
+  return `<div class="sg"><h2>Complete AI & Full-Stack Curriculum</h2><p>14 parts • 132 modules • 2,000+ topics — from statistics fundamentals to cutting-edge AI agents</p><div class="sg-grid">${SYL.map(p=>{const pc=Math.floor(Math.random()*30+(p.id<3?40:0));return`<div class="sg-card" onclick="expPart=${p.id};buildTree();nav('syllabus')"><div class="sg-bar" style="background:${p.c}"></div><div class="sg-icon">${p.ic}</div><div class="sg-t">Part ${p.id}: ${p.t}</div><div class="sg-m">${p.m} modules</div><div class="sg-prog"><div class="sg-fill" style="width:${pc}%;background:${p.c}"></div></div></div>`}).join("")}</div></div>`;
+}
+
+function dashHTML(){
+  const ds=[{d:"Mon",t:4,m:45},{d:"Tue",t:6,m:72},{d:"Wed",t:3,m:35},{d:"Thu",t:7,m:85},{d:"Fri",t:5,m:60},{d:"Sat",t:2,m:25},{d:"Sun",t:0,m:0}];
+  return `<div class="dash"><div class="stats">
+    <div class="scard"><div class="lbl">Topics Completed</div><div class="val" style="color:#2563EB">23</div><div class="sub">of 132</div><div class="bar"><div class="fill" style="width:17%;background:#2563EB"></div></div></div>
+    <div class="scard"><div class="lbl">Current Streak</div><div class="val" style="color:#F97316">7 days 🔥</div><div class="sub">Personal best: 12</div></div>
+    <div class="scard"><div class="lbl">Study Hours</div><div class="val" style="color:#059669">42</div><div class="sub">This month</div></div>
+    <div class="scard"><div class="lbl">Avg Quiz Score</div><div class="val" style="color:#7C3AED">78%</div><div class="sub">Last 30 days</div></div>
+  </div>
+  <div class="panel"><div class="panel-h"><div class="panel-t">📅 Due for Review</div><span class="panel-lnk">See all →</span></div>
+    ${[{t:"Probability Theory — Bayes' Theorem",c:"#EF4444"},{t:"Linear Regression — Assumptions",c:"#F97316"},{t:"Gradient Descent — Learning Rate",c:"#F59E0B"},{t:"CNN — Pooling Layers",c:"#F59E0B"}].map(r=>`<div class="r-row"><div style="display:flex;align-items:center"><div class="r-dot" style="background:${r.c}"></div><span class="r-txt">${r.t}</span></div><button class="r-btn" onclick="openTopic('1.3')">Review</button></div>`).join("")}
+  </div>
+  <div class="panel"><div class="panel-t" style="margin-bottom:20px">📈 This Week</div><div class="bars">${ds.map(d=>`<div class="bcol"><div class="bval">${d.t}t</div><div class="bbar ${d.m===0?'empty':''}" style="height:${Math.max(4,d.m*1.1)}px"></div><div class="bday">${d.d}</div></div>`).join("")}</div></div></div>`;
+}
+
+function learnHTML(){
+  return `<div class="learn"><div class="l-header"><div class="l-tags"><span class="l-tag" style="background:var(--blue-light);color:var(--blue)">Part 2: Machine Learning</span><span class="l-tag" style="background:var(--violet-light);color:var(--violet)">Module 5: Classification</span></div><h1 class="l-title">Support Vector Machines (SVM)</h1><div class="l-meta"><span>⏱️ ~25 min</span><span>📖 Intermediate</span><span>5 sub-topics</span></div></div>
+  <div class="stream-ind" id="strm"><div class="s-dots"><div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div></div><span class="s-txt">AI Teacher is generating your lesson...</span></div>
+  <div id="secs"></div><div id="qzC" class="hidden"></div><div id="fuC" class="hidden"></div></div>`;
+}
+
+const SECS=[
+  `<div class="sec"><div class="sec-card"><div class="sec-lbl"><span class="sec-lbl-i">📖</span><span class="sec-lbl-t" style="color:var(--blue)">Concept Explanation</span></div><p class="ex-p">A Support Vector Machine finds the optimal hyperplane that separates data points of different classes with the <strong>maximum margin</strong>. The key insight is that only the points closest to the decision boundary (called <strong>support vectors</strong>) determine the position of the hyperplane — all other points are irrelevant to the solution.</p><p class="ex-p">This makes SVMs remarkably robust to outliers and effective in high-dimensional spaces, even when the number of dimensions exceeds the number of samples.</p></div></div>`,
+  `<div class="sec"><div class="ana"><div class="bg-i">💡</div><div class="sec-lbl"><span class="sec-lbl-i">💡</span><span class="sec-lbl-t" style="color:var(--amber)">Real-World Analogy</span></div><p class="ana-t">"Imagine you're a city planner drawing a boundary between two neighborhoods. You want the widest possible street between them — that's the margin. The buildings closest to the street on each side are your support vectors. Moving any other building doesn't affect where the street goes, but moving a support vector changes everything."</p></div></div>`,
+  `<div class="sec"><div class="mth"><div class="sec-lbl"><span class="sec-lbl-i">📐</span><span class="sec-lbl-t" style="color:var(--violet)">Mathematical Foundation</span></div><pre class="mth-blk">The optimization objective:
+
+minimize  ½||w||²
+subject to  yᵢ(w·xᵢ + b) ≥ 1  for all i
+
+where w is the weight vector, b is the bias,
+and the margin width = 2/||w||</pre></div></div>`,
+  `<div class="sec"><div class="cde"><div class="cde-h"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">💻</span><span class="sec-lbl-t" style="color:var(--green)">Code Example</span><span class="cde-lang">python</span></div><div style="display:flex;gap:6px"><button class="btn-r">▶ Run</button><button class="btn-cp">📋 Copy</button></div></div><pre class="cde-body"><span style="color:#93C5FD">from</span> <span style="color:#FDE68A">sklearn.svm</span> <span style="color:#93C5FD">import</span> SVC
+<span style="color:#93C5FD">from</span> <span style="color:#FDE68A">sklearn.datasets</span> <span style="color:#93C5FD">import</span> make_classification
+<span style="color:#93C5FD">from</span> <span style="color:#FDE68A">sklearn.model_selection</span> <span style="color:#93C5FD">import</span> train_test_split
+<span style="color:#93C5FD">from</span> <span style="color:#FDE68A">sklearn.metrics</span> <span style="color:#93C5FD">import</span> accuracy_score
+
+<span style="color:#6B7280"># Generate sample data</span>
+X, y = make_classification(
+    n_samples=<span style="color:#A78BFA">200</span>, n_features=<span style="color:#A78BFA">2</span>,
+    n_redundant=<span style="color:#A78BFA">0</span>, random_state=<span style="color:#A78BFA">42</span>
+)
+
+<span style="color:#6B7280"># Split and train</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span style="color:#A78BFA">0.3</span>, random_state=<span style="color:#A78BFA">42</span>
+)
+
+<span style="color:#6B7280"># Train SVM with RBF kernel</span>
+svm = SVC(kernel=<span style="color:#86EFAC">'rbf'</span>, C=<span style="color:#A78BFA">1.0</span>, gamma=<span style="color:#86EFAC">'scale'</span>)
+svm.fit(X_train, y_train)
+
+<span style="color:#6B7280"># Evaluate</span>
+y_pred = svm.predict(X_test)
+<span style="color:#93C5FD">print</span>(<span style="color:#86EFAC">f"Accuracy: {accuracy_score(y_test, y_pred):.2%}"</span>)
+<span style="color:#93C5FD">print</span>(<span style="color:#86EFAC">f"Support vectors: {svm.n_support_}"</span>)</pre><div class="cde-out"><div class="cde-out-l">OUTPUT</div><pre class="cde-out-t">Accuracy: 91.67%
+Support vectors: [24, 21]</pre></div></div></div>`,
+  `<div class="sec"><div class="pit"><div class="sec-lbl"><span class="sec-lbl-i">⚠️</span><span class="sec-lbl-t" style="color:var(--red)">Common Pitfalls</span></div><div class="pit-r"><span class="pit-x">✕</span><span class="pit-t">Not scaling features before training — SVMs are sensitive to feature magnitude</span></div><div class="pit-r"><span class="pit-x">✕</span><span class="pit-t">Using linear kernel on non-linearly separable data</span></div><div class="pit-r"><span class="pit-x">✕</span><span class="pit-t">Setting C too high causes overfitting; too low causes underfitting</span></div><div class="pit-r"><span class="pit-x">✕</span><span class="pit-t">Ignoring class imbalance — use class_weight='balanced'</span></div></div></div>`,
+];
+
+function stream(){
+  const c=document.getElementById("secs"),si=document.getElementById("strm");if(!c)return;c.innerHTML="";
+  let i=0;clearInterval(timer);
+  timer=setInterval(()=>{if(i<SECS.length){c.insertAdjacentHTML("beforeend",SECS[i]);i++}else{clearInterval(timer);if(si)si.classList.add("hidden");showQz();showFu()}},1100);
+}
+
+function showQz(){const e=document.getElementById("qzC");if(!e)return;e.classList.remove("hidden");rQz()}
+function rQz(){
+  const e=document.getElementById("qzC");let h=`<div class="qc"><div class="qc-h"><div class="qc-tl"><span style="font-size:18px">🧪</span> Knowledge Check</div><span class="qc-cnt">${QZ.length} questions</span></div>`;
+  QZ.forEach((q,qi)=>{
+    h+=`<div class="qq"><div class="qq-t"><span class="qq-n">Q${qi+1}.</span>${q.q}</div><div class="qq-opts">`;
+    q.o.forEach((o,oi)=>{
+      const s=qa[qi]===oi,cr=oi===q.a;
+      let cl="qo",bl=String.fromCharCode(65+oi);
+      if(qSub){cl+=" lk";if(cr){cl+=" ok";bl="✓"}else if(s){cl+=" no";bl="✕"}}else if(s)cl+=" sel";
+      h+=`<div class="${cl}" onclick="aQ(${qi},${oi})"><span class="qo-b">${bl}</span>${o}</div>`;
+    });h+=`</div></div>`;
+  });
+  if(!qSub){const r=Object.keys(qa).length>=QZ.length;h+=`<button class="q-sub ${r?'rdy':'dis'}" onclick="${r?'sQ()':''}">${r?'Submit Answers':`Answer all ${QZ.length} questions`}</button>`}
+  else{const sc=Object.entries(qa).filter(([i,a])=>a===QZ[i].a).length;h+=`<div class="q-res"><div class="q-score">${sc}/${QZ.length}</div><div class="q-msg">${sc===QZ.length?'🎉 Perfect score! Great understanding of SVMs.':'Review the highlighted answers and try again.'}</div></div>`}
+  h+=`</div>`;e.innerHTML=h;
+}
+function aQ(qi,oi){if(qSub)return;qa[qi]=oi;rQz()}
+function sQ(){qSub=true;rQz()}
+
+function showFu(){const e=document.getElementById("fuC");if(!e)return;e.classList.remove("hidden");e.innerHTML=`<div class="fu"><span style="font-size:18px">💬</span><input placeholder="Ask a follow-up question about SVMs..."><button class="fu-send">Send</button></div>`}
+
+buildTree();render();
+</script>
+</body>
+</html>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyAI — End-to-End Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky: #0EA5E9; --violet: #8B5CF6; --amber: #F59E0B; --emerald: #10B981;
+    --red: #EF4444; --orange: #D97706; --pink: #EC4899; --lavender: #A78BFA;
+    --dark: #0A0E1A; --card: #0F172A; --border: #1E293B; --text: #E2E8F0;
+    --muted: #64748B; --subtle: #94A3B8; --dim: #334155; --surface: #475569;
+  }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    min-height: 100vh;
+    padding: 28px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .container { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  .header { text-align: center; margin-bottom: 36px; }
+  .header-badge {
+    display: inline-block; padding: 6px 22px; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(14,165,233,0.06), rgba(139,92,246,0.06));
+    border: 1px solid var(--dim); margin-bottom: 14px;
+    font-size: 10.5px; letter-spacing: 3px; color: var(--subtle); text-transform: uppercase;
+  }
+  .header h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 38px; font-weight: 900; margin: 6px 0 6px; letter-spacing: -1.5px;
+    background: linear-gradient(135deg, #0EA5E9, #8B5CF6, #EC4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p { color: var(--muted); font-size: 12.5px; }
+  .flow-btn {
+    margin-top: 18px; padding: 9px 24px; border-radius: 8px;
+    font-size: 11.5px; font-weight: 700; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+    transition: all 0.25s; border: 1px solid var(--dim);
+    background: transparent; color: var(--subtle);
+  }
+  .flow-btn:hover { border-color: var(--sky); color: var(--sky); }
+  .flow-btn.active {
+    background: linear-gradient(135deg, var(--sky), var(--violet));
+    color: #fff; border: none;
+  }
+
+  /* ── LAYER ── */
+  .layer {
+    border-radius: 16px; padding: 18px 22px; margin-bottom: 0;
+    border: 1px solid transparent; transition: all 0.3s;
+  }
+  .layer:hover { transform: scale(1.003); }
+  .layer-label {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .layer-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .layer-name {
+    font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+  }
+  .layer-line { flex: 1; height: 1px; }
+  .layer-items {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+
+  /* ── ITEM CARD ── */
+  .item {
+    padding: 13px 15px; background: rgba(15,23,42,0.7);
+    border: 1px solid var(--border); border-radius: 10px;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .item:hover { border-color: #475569; background: rgba(15,23,42,0.9); }
+  .item.highlight { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.06); }
+  .item.highlight::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--emerald), transparent);
+  }
+  .item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .item-icon { font-size: 16px; line-height: 1; }
+  .item-label { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .item-sub { font-size: 9.5px; color: var(--muted); line-height: 1.4; letter-spacing: 0.2px; }
+
+  /* ── CONNECTOR ARROW ── */
+  .connector {
+    display: flex; justify-content: center; padding: 4px 0;
+  }
+  .connector-line { width: 1px; height: 8px; background: var(--dim); }
+  .connector-arrow {
+    width: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 6px solid var(--surface);
+  }
+
+  /* ── LLM PROVIDERS ── */
+  .llm-panel {
+    position: absolute; right: -8px; top: 324px; width: 184px; z-index: 2;
+  }
+  @media (max-width: 1200px) { .llm-panel { position: static; margin: 16px auto; width: 100%; max-width: 500px; } }
+  .llm-panel-inner {
+    background: linear-gradient(135deg, rgba(30,18,7,0.8), rgba(30,18,7,0.5));
+    border: 1px solid rgba(217,119,6,0.15); border-radius: 16px; padding: 14px 16px;
+  }
+  .llm-panel-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--orange);
+    margin-bottom: 12px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .llm-card {
+    padding: 10px 12px; margin-bottom: 6px; background: rgba(15,23,42,0.6);
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  .llm-card:last-child { margin-bottom: 0; }
+  .llm-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .llm-card-name { font-size: 11px; font-weight: 700; }
+  .llm-card-sub { font-size: 9px; color: var(--muted); }
+
+  /* ── DATA FLOW ── */
+  .flow-panel {
+    margin-top: 24px; border-radius: 16px; padding: 22px 26px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(15,23,42,0.6));
+    border: 1px solid var(--border);
+    animation: fadeSlide 0.35s ease;
+  }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .flow-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+    color: var(--sky); margin-bottom: 16px; text-transform: uppercase;
+  }
+  .flow-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  @media (max-width: 800px) { .flow-grid { grid-template-columns: repeat(2, 1fr); } }
+  .flow-step {
+    padding: 13px; background: rgba(15,23,42,0.5);
+    border: 1px solid var(--border); border-radius: 10px;
+    transition: all 0.2s; cursor: default; position: relative;
+  }
+  .flow-step:hover { background: rgba(15,23,42,0.8); }
+  .flow-step-num {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 18px; font-weight: 800; opacity: 0.08;
+  }
+  .flow-step-label { font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .flow-step-text { font-size: 11px; color: #CBD5E1; font-weight: 600; line-height: 1.3; }
+  .flow-step-route { font-size: 9px; color: var(--surface); margin-top: 4px; }
+
+  /* ── RENDERING PIPELINE ── */
+  .pipeline {
+    margin-top: 24px; border-radius: 16px; padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(14,42,15,0.8), rgba(14,42,15,0.5));
+    border: 1px solid rgba(16,185,129,0.15);
+  }
+  .pipeline-label {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .pipeline-items { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .pipeline-card {
+    padding: 11px 14px; background: rgba(15,23,42,0.7);
+    border: 1px solid var(--border); border-radius: 10px; text-align: center; min-width: 112px;
+  }
+  .pipeline-icon { font-size: 20px; margin-bottom: 4px; }
+  .pipeline-name { font-size: 11px; font-weight: 700; color: var(--text); }
+  .pipeline-tech { font-size: 9px; color: var(--emerald); margin-top: 2px; }
+  .pipeline-arrow { color: var(--dim); font-size: 14px; }
+
+  /* ── CROSS-CUTTING ── */
+  .cross-grid { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 800px) { .cross-grid { grid-template-columns: 1fr; } }
+  .cross-card { border-radius: 14px; padding: 14px 16px; }
+  .cross-label {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .cross-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cross-name { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .cross-item {
+    font-size: 10px; color: var(--subtle); padding: 4px 0;
+    border-bottom: 1px solid rgba(30,41,59,0.25);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cross-item:last-child { border-bottom: none; }
+  .cross-item-dot { width: 3px; height: 3px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── CACHING ── */
+  .cache-panel {
+    margin-top: 24px; border-radius: 14px; padding: 18px 22px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(15,23,42,0.5));
+    border: 1px solid var(--dim);
+  }
+  .cache-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+    color: var(--pink); margin-bottom: 14px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cache-items { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .cache-card {
+    width: 142px; padding: 10px 12px; text-align: center;
+    border: 1px solid rgba(236,72,153,0.08); border-radius: 8px;
+  }
+  .cache-name { font-size: 9px; font-weight: 800; color: var(--pink); letter-spacing: 1px; margin-bottom: 2px; }
+  .cache-tech { font-size: 9px; color: var(--muted); }
+  .cache-stats { display: flex; justify-content: center; gap: 8px; margin-top: 4px; font-size: 9px; }
+  .cache-stat-label { color: var(--surface); }
+  .cache-stat-val { color: var(--subtle); }
+  .cache-hit-val { color: var(--emerald); }
+  .cache-arrow { color: var(--dim); font-size: 12px; }
+
+  /* ── PROMPT ARCHITECTURE ── */
+  .prompt-panel {
+    margin-top: 24px; border-radius: 14px; padding: 18px 22px;
+    background: linear-gradient(135deg, rgba(26,15,46,0.8), rgba(26,15,46,0.5));
+    border: 1px solid rgba(139,92,246,0.15);
+  }
+  .prompt-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+    color: var(--lavender); margin-bottom: 14px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .prompt-items { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .prompt-card {
+    flex: 1 1 155px; max-width: 175px; padding: 11px 13px;
+    background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 8px;
+  }
+  .prompt-name { font-size: 10px; font-weight: 700; color: #C4B5FD; margin-bottom: 3px; }
+  .prompt-tokens { font-size: 9px; color: var(--muted); margin-bottom: 4px; }
+  .prompt-desc { font-size: 9px; color: var(--subtle); line-height: 1.3; }
+
+  /* ── INFRA STATS ── */
+  .infra-stats {
+    margin-top: 24px; margin-bottom: 16px;
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .infra-stat {
+    padding: 9px 18px; background: rgba(15,23,42,0.5);
+    border: 1px solid var(--border); border-radius: 8px; text-align: center;
+  }
+  .infra-stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .infra-stat-value { font-size: 12px; font-weight: 700; color: #CBD5E1; margin-top: 2px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center; padding: 18px 0; margin-top: 10px;
+    border-top: 1px solid var(--border); font-size: 10px; color: var(--surface);
+  }
+
+  /* Glow dot utility */
+  .glow { box-shadow: 0 0 12px currentColor; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ════════ HEADER ════════ -->
+  <div class="header">
+    <div class="header-badge">System Architecture</div>
+    <h1>StudyAI — End-to-End Architecture</h1>
+    <p>LLM-Powered Adaptive Learning Platform • 118 Modules • 2,000+ Topics</p>
+    <button class="flow-btn" id="flowToggle" onclick="toggleFlow()">▶ SHOW DATA FLOW</button>
+  </div>
+
+  <!-- ════════ ARCHITECTURE LAYERS ════════ -->
+  <div id="layers"></div>
+
+  <!-- ════════ LLM PROVIDERS (Side) ════════ -->
+  <div class="llm-panel" id="llmPanel">
+    <div class="llm-panel-inner">
+      <div class="llm-panel-label">
+        <span class="layer-dot" style="background:#D97706; box-shadow:0 0 12px rgba(217,119,6,0.5)"></span>
+        LLM PROVIDERS
+      </div>
+      <div class="llm-card">
+        <div class="llm-card-head"><span style="font-size:14px">🟠</span><span class="llm-card-name" style="color:#D97706">Claude API</span></div>
+        <div class="llm-card-sub">Sonnet / Opus — Primary</div>
+      </div>
+      <div class="llm-card">
+        <div class="llm-card-head"><span style="font-size:14px">🟢</span><span class="llm-card-name" style="color:#059669">GPT-4o</span></div>
+        <div class="llm-card-sub">Fallback model</div>
+      </div>
+      <div class="llm-card">
+        <div class="llm-card-head"><span style="font-size:14px">🦙</span><span class="llm-card-name" style="color:#7C3AED">Llama 3.1</span></div>
+        <div class="llm-card-sub">Open-source fallback</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ DATA FLOW (hidden by default) ════════ -->
+  <div class="flow-panel" id="flowPanel" style="display:none">
+    <div class="flow-title">⚡ Data Flow: User Selects a Topic for Learning</div>
+    <div class="flow-grid" id="flowGrid"></div>
+  </div>
+
+  <!-- ════════ RENDERING PIPELINE ════════ -->
+  <div class="pipeline">
+    <div class="pipeline-label">
+      <span class="layer-dot" style="background:var(--emerald); box-shadow:0 0 12px rgba(16,185,129,0.5)"></span>
+      <span class="layer-name" style="color:var(--emerald)">Content Rendering Pipeline (Client-Side)</span>
+    </div>
+    <div class="pipeline-items" id="pipelineItems"></div>
+  </div>
+
+  <!-- ════════ CROSS-CUTTING CONCERNS ════════ -->
+  <div class="cross-grid" id="crossGrid"></div>
+
+  <!-- ════════ CACHING STRATEGY ════════ -->
+  <div class="cache-panel">
+    <div class="cache-label">
+      <span class="layer-dot" style="background:var(--pink); box-shadow:0 0 10px rgba(236,72,153,0.5)"></span>
+      6-LAYER CACHING STRATEGY
+    </div>
+    <div class="cache-items" id="cacheItems"></div>
+  </div>
+
+  <!-- ════════ PROMPT ARCHITECTURE ════════ -->
+  <div class="prompt-panel">
+    <div class="prompt-label">
+      <span class="layer-dot" style="background:var(--lavender); box-shadow:0 0 10px rgba(167,139,250,0.5)"></span>
+      LLM PROMPT ARCHITECTURE — What Gets Sent to the Model
+    </div>
+    <div class="prompt-items" id="promptItems"></div>
+  </div>
+
+  <!-- ════════ INFRA STATS ════════ -->
+  <div class="infra-stats" id="infraStats"></div>
+
+  <!-- ════════ FOOTER ════════ -->
+  <div class="footer">
+    StudyAI Architecture v1.0 • February 2026 • 5 Layers • 8 Microservices • 3 LLM Providers • 6 Cache Layers
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const LAYERS = [
+  { id:"client", label:"CLIENT LAYER", color:"#0EA5E9", bg:"#0C4A6E",
+    items:[
+      { id:"web", label:"Web App (SPA)", sub:"React 18 + TypeScript + Vite + TailwindCSS", icon:"🌐", w:320 },
+      { id:"pwa", label:"PWA / Offline", sub:"Service Worker + Cache API + Background Sync", icon:"📶", w:310 },
+    ]},
+  { id:"edge", label:"EDGE / CDN", color:"#8B5CF6", bg:"#3B0764",
+    items:[
+      { id:"cdn", label:"CloudFront CDN", sub:"Static assets + cached responses", icon:"⚡", w:240 },
+      { id:"waf", label:"WAF / DDoS", sub:"AWS Shield + rate limiting", icon:"🛡️", w:200 },
+      { id:"edge-fn", label:"Edge Functions", sub:"Vercel Edge Runtime", icon:"λ", w:200 },
+    ]},
+  { id:"gateway", label:"API GATEWAY", color:"#F59E0B", bg:"#78350F",
+    items:[
+      { id:"gw", label:"Kong API Gateway", sub:"Routing • Auth validation • Rate limiting • Load balancing", icon:"🚪", w:660 },
+    ]},
+  { id:"services", label:"APPLICATION SERVICES", color:"#10B981", bg:"#064E3B",
+    items:[
+      { id:"auth", label:"Auth Service", sub:"Node.js + Auth0", icon:"🔐", w:150 },
+      { id:"syllabus", label:"Syllabus Svc", sub:"FastAPI", icon:"📚", w:140 },
+      { id:"llm-orch", label:"LLM Orchestrator", sub:"FastAPI + LangChain", icon:"🧠", w:175, highlight:true },
+      { id:"content", label:"Content Svc", sub:"FastAPI", icon:"📝", w:140 },
+      { id:"quiz", label:"Quiz Engine", sub:"FastAPI", icon:"❓", w:130 },
+      { id:"progress", label:"Progress Svc", sub:"Node.js", icon:"📊", w:140 },
+      { id:"search", label:"Search Svc", sub:"Node + ES", icon:"🔍", w:130 },
+      { id:"notif", label:"Notifications", sub:"Node + BullMQ", icon:"🔔", w:140 },
+    ]},
+  { id:"data", label:"DATA & AI LAYER", color:"#EF4444", bg:"#7F1D1D",
+    items:[
+      { id:"pg", label:"Neon DB", sub:"Serverless Postgres • Users • Syllabus • Progress", icon:"⚡", w:250 },
+      { id:"mongo", label:"MongoDB Atlas", sub:"Generated Content", icon:"🍃", w:180 },
+      { id:"redis", label:"Redis 7", sub:"Cache • Queue • Sessions", icon:"💨", w:190 },
+      { id:"pinecone", label:"Pinecone", sub:"Vector Embeddings", icon:"🌲", w:160 },
+      { id:"elastic", label:"Elasticsearch", sub:"Full-text Search", icon:"🔎", w:170 },
+    ]},
+];
+
+const FLOW_STEPS = [
+  { from:"Web App", to:"CDN", label:"User clicks topic", color:"#0EA5E9" },
+  { from:"CDN", to:"Gateway", label:"Route request", color:"#8B5CF6" },
+  { from:"Gateway", to:"Orchestrator", label:"Auth + rate limit", color:"#F59E0B" },
+  { from:"Orchestrator", to:"Redis", label:"Check cache", color:"#EF4444" },
+  { from:"Orchestrator", to:"Syllabus Svc", label:"Fetch topic metadata", color:"#10B981" },
+  { from:"Orchestrator", to:"Claude API", label:"Stream to LLM", color:"#D97706" },
+  { from:"Claude API", to:"Orchestrator", label:"Token stream back", color:"#D97706" },
+  { from:"Orchestrator", to:"Web App", label:"SSE to client", color:"#0EA5E9" },
+  { from:"Orchestrator", to:"MongoDB", label:"Persist content", color:"#EF4444" },
+  { from:"Orchestrator", to:"Progress Svc", label:"Update progress", color:"#10B981" },
+];
+
+const RENDERING = [
+  { icon:"📝", label:"Markdown", tech:"react-markdown" },
+  { icon:"📐", label:"LaTeX Math", tech:"KaTeX" },
+  { icon:"💻", label:"Code + Run", tech:"Monaco + Pyodide" },
+  { icon:"📊", label:"Charts", tech:"Chart.js / Recharts" },
+  { icon:"🔀", label:"Diagrams", tech:"Mermaid.js" },
+  { icon:"❓", label:"Quizzes", tech:"Interactive MCQ" },
+];
+
+const CROSS_SECTIONS = [
+  { title:"OBSERVABILITY", color:"#F59E0B", bg:"#78350F",
+    items:["Datadog APM — all services","Sentry — error tracking","LangSmith — LLM tracing","PagerDuty — on-call alerts"] },
+  { title:"CI/CD PIPELINE", color:"#8B5CF6", bg:"#3B0764",
+    items:["GitHub Actions — test/build","Docker → ECR — registry","ArgoCD — GitOps K8s deploy","Canary: 10% → 50% → 100%"] },
+  { title:"SECURITY", color:"#EF4444", bg:"#7F1D1D",
+    items:["OAuth 2.0 + JWT rotation","PromptGuard — injection detect","TLS 1.3 + AES-256 at rest","RBAC: free/pro/premium/admin"] },
+];
+
+const CACHE_LAYERS = [
+  { l:"L1", n:"Browser", t:"TanStack Query", ttl:"5min", hit:"40%" },
+  { l:"L2", n:"ServiceWorker", t:"Cache API", ttl:"24h", hit:"30%" },
+  { l:"L3", n:"CDN", t:"CloudFront", ttl:"1h", hit:"50%" },
+  { l:"L4", n:"API Cache", t:"Redis", ttl:"24h", hit:"60%" },
+  { l:"L5", n:"Warm Cache", t:"Pre-generated", ttl:"7d", hit:"80%" },
+  { l:"L6", n:"Database", t:"Neon DB / MongoDB", ttl:"∞", hit:"100%" },
+];
+
+const PROMPT_SECTIONS = [
+  { label:"System Message", tokens:"~500 tok", desc:"Expert teacher persona + output format" },
+  { label:"Syllabus Context", tokens:"~300 tok", desc:"Part → Module → Topic + all sub-bullets" },
+  { label:"User Context", tokens:"~150 tok", desc:"Level + prereqs + weak areas" },
+  { label:"Output Schema", tokens:"~300 tok", desc:"JSON: explanation, code, math, quiz" },
+  { label:"Few-Shot Example", tokens:"~700 tok", desc:"1–2 golden output examples" },
+  { label:"User Query", tokens:"~30 tok", desc:"\"Teach me: {Topic Title}\"" },
+];
+
+const INFRA = [
+  { label:"AWS EKS", value:"3 AZs, 6–50 nodes" },
+  { label:"Database", value:"Neon DB (Serverless)" },
+  { label:"Deploy", value:"Blue-green + canary" },
+  { label:"Target", value:"50K concurrent users" },
+  { label:"SLA", value:"99.9% uptime" },
+  { label:"LLM Cost", value:"< $0.05/user/day" },
+];
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+
+function renderLayers() {
+  const el = document.getElementById('layers');
+  let html = '';
+  LAYERS.forEach((layer, li) => {
+    html += `<div class="layer" style="background:linear-gradient(135deg,${layer.bg}cc,${layer.bg}88);border-color:${layer.color}20">`;
+    html += `<div class="layer-label">
+      <span class="layer-dot" style="background:${layer.color};box-shadow:0 0 12px ${layer.color}80"></span>
+      <span class="layer-name" style="color:${layer.color}">${layer.label}</span>
+      <span class="layer-line" style="background:linear-gradient(90deg,${layer.color}30,transparent)"></span>
+    </div>`;
+    html += `<div class="layer-items">`;
+    layer.items.forEach(item => {
+      const cls = item.highlight ? 'item highlight' : 'item';
+      html += `<div class="${cls}" style="width:${item.w}px">
+        <div class="item-head"><span class="item-icon">${item.icon}</span><span class="item-label">${item.label}</span></div>
+        <div class="item-sub">${item.sub}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+    if (li < LAYERS.length - 1) {
+      html += `<div class="connector"><div style="display:flex;flex-direction:column;align-items:center">
+        <div class="connector-line"></div><div class="connector-arrow"></div>
+      </div></div>`;
+    }
+  });
+  el.innerHTML = html;
+}
+
+function renderFlowSteps() {
+  const el = document.getElementById('flowGrid');
+  let html = '';
+  FLOW_STEPS.forEach((step, i) => {
+    html += `<div class="flow-step" onmouseenter="this.style.borderColor='${step.color}40';this.style.background='linear-gradient(135deg,${step.color}15,${step.color}08)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='rgba(15,23,42,0.5)'">
+      <div class="flow-step-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="flow-step-label" style="color:${step.color}">Step ${i+1}</div>
+      <div class="flow-step-text">${step.label}</div>
+      <div class="flow-step-route">${step.from} → ${step.to}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderPipeline() {
+  const el = document.getElementById('pipelineItems');
+  let html = '';
+  RENDERING.forEach((r, i) => {
+    html += `<div class="pipeline-card">
+      <div class="pipeline-icon">${r.icon}</div>
+      <div class="pipeline-name">${r.label}</div>
+      <div class="pipeline-tech">${r.tech}</div>
+    </div>`;
+    if (i < RENDERING.length - 1) html += `<span class="pipeline-arrow">→</span>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderCross() {
+  const el = document.getElementById('crossGrid');
+  let html = '';
+  CROSS_SECTIONS.forEach(s => {
+    html += `<div class="cross-card" style="background:linear-gradient(135deg,${s.bg}cc,${s.bg}88);border:1px solid ${s.color}20">`;
+    html += `<div class="cross-label">
+      <span class="cross-dot" style="background:${s.color};box-shadow:0 0 8px ${s.color}80"></span>
+      <span class="cross-name" style="color:${s.color}">${s.title}</span>
+    </div>`;
+    s.items.forEach((item, i) => {
+      html += `<div class="cross-item">
+        <span class="cross-item-dot" style="background:${s.color}60"></span>${item}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderCache() {
+  const el = document.getElementById('cacheItems');
+  let html = '';
+  CACHE_LAYERS.forEach((c, i) => {
+    html += `<div class="cache-card" style="background:rgba(236,72,153,${(0.02 + i*0.015).toFixed(3)})">
+      <div class="cache-name">${c.l}: ${c.n}</div>
+      <div class="cache-tech">${c.t}</div>
+      <div class="cache-stats">
+        <span><span class="cache-stat-label">TTL:</span> <span class="cache-stat-val">${c.ttl}</span></span>
+        <span><span class="cache-stat-label">Hit:</span> <span class="cache-hit-val">${c.hit}</span></span>
+      </div>
+    </div>`;
+    if (i < CACHE_LAYERS.length - 1) html += `<span class="cache-arrow">→</span>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderPrompt() {
+  const el = document.getElementById('promptItems');
+  let html = '';
+  PROMPT_SECTIONS.forEach(s => {
+    html += `<div class="prompt-card">
+      <div class="prompt-name">${s.label}</div>
+      <div class="prompt-tokens">${s.tokens}</div>
+      <div class="prompt-desc">${s.desc}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderInfra() {
+  const el = document.getElementById('infraStats');
+  let html = '';
+  INFRA.forEach(s => {
+    html += `<div class="infra-stat">
+      <div class="infra-stat-label">${s.label}</div>
+      <div class="infra-stat-value">${s.value}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// TOGGLE FLOW
+// ═══════════════════════════════════════════
+let flowVisible = false;
+function toggleFlow() {
+  flowVisible = !flowVisible;
+  const panel = document.getElementById('flowPanel');
+  const btn = document.getElementById('flowToggle');
+  panel.style.display = flowVisible ? 'block' : 'none';
+  btn.className = flowVisible ? 'flow-btn active' : 'flow-btn';
+  btn.textContent = flowVisible ? '✦ DATA FLOW ACTIVE' : '▶ SHOW DATA FLOW';
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderLayers();
+renderFlowSteps();
+renderPipeline();
+renderCross();
+renderCache();
+renderPrompt();
+renderInfra();
+</script>
+</body>
+</html>

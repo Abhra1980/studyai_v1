@@ -1,0 +1,10 @@
+export { default as HomePage } from './HomePage';
+export { default as LoginPage } from './LoginPage';
+export { default as ForgotPasswordPage } from './ForgotPasswordPage';
+export { default as ResetPasswordPage } from './ResetPasswordPage';
+export { default as RegisterPage } from './RegisterPage';
+export { default as SyllabusPage } from './SyllabusPage';
+export { default as LearnPage } from './LearnPage';
+export { default as GenerateContentPage } from './GenerateContentPage';
+export { default as StudyAIPage } from './StudyAIPage';
+export { default as AdminPage } from './AdminPage';

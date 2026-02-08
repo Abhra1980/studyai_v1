@@ -1,0 +1,30 @@
+# Environment and secrets - NEVER commit
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Build outputs
+frontend/dist/
+*.egg-info/
+*.egg
+
+# IDE and OS
+.cursor/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+.cache/

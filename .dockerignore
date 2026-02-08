@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+venv
+env
+
+# Build outputs
+frontend/dist
+*.egg-info
+*.egg
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.swp
+*~
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Docs and misc
+*.md
+*.docx
+*.xlsx
+*.html
+*.jsx
+*.ipynb
